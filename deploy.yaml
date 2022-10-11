@@ -1,0 +1,35 @@
+import: 
+  - recipe/laravel.php
+  - contrib/npm.php
+
+config:
+  repository: 'https://github.com/PabloCoz/allfree-app.git'
+
+hosts:
+  server-allfree:
+    remote_user: root
+    hostname: allfree.app
+    deploy_path: '/var/www/{{hostname}}'
+
+tasks:
+  deploy:
+    - deploy:prepare
+    - deploy:vendors
+    - artisan:storage:link
+    - artisan:config:cache
+    - artisan:route:cache
+    - artisan:view:cache
+    - artisan:event:cache
+    - artisan:migrate:fresh
+    - artisan:migrate
+    - artisan:db:seed
+    - npm:install
+    - build
+    - deploy:publish
+
+  build:
+    - cd: "{{release_path}}"
+    - run: npm run build   
+
+after:
+  deploy:failed: deploy:unlock
